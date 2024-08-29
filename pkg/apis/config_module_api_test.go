@@ -8,9 +8,13 @@ import (
 	"github.com/Netsocs-Team/netsocs_go_sdk/pkg/apis"
 )
 
+func startConfigModuleEnvs() {
+	os.Setenv("CONFIGURATION_API_HOST", "http://netsocslabs.com:3691")
+}
+
 func TestRequestConfigToDevice(t *testing.T) {
 	// Create a new ConfigModuleApi
-	os.Setenv("CONFIGURATION_API_HOST", "http://netsocslabs.com:3691")
+	startConfigModuleEnvs()
 	instance, err := apis.NewConfigModuleApi()
 	if err != nil {
 		t.Error(err)
