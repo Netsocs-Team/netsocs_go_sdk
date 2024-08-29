@@ -13,7 +13,7 @@ jobs:
         id: bump_version
         uses: gustavo1020/-release-version-@v1.0.0-stable
         with:
-          list-version-fragment: ${{secret.LIST-VERSIONS-FRAGMENTS}}
+          list-version-fragment: "major feature bug hotfix fix"
           prefix: "v"
 
       - name: Print release version
