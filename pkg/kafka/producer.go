@@ -27,24 +27,55 @@ func createProducer() error {
 	producerConfig.Producer.Return.Successes = true
 	_producer, err := sarama.NewSyncProducer(strings.Split(kafkabrokers, ","), producerConfig)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	producer = _producer
 	return nil
 }
 
-func GetKafkaProducer() (sarama.SyncProducer, error) {
+func (kp KafkaProducer) Send(topic string, eventType string, requestId string, producerName string, data []byte) error {
 	if producer == nil {
 		err := createProducer()
 		if err != nil {
-			return nil, err
+			return err
 		}
-
 	}
-	return producer, nil
+
+	message, err := kp.buildMessageFormat(eventType, requestId, producerName, data)
+	if err != nil {
+		return err
+	}
+	messageToProduce := &sarama.ProducerMessage{
+		Topic:     topic,
+		Partition: -1,
+		Value:     sarama.ByteEncoder(message),
+		Headers: []sarama.RecordHeader{
+			{
+				Key:   []byte("requestId"),
+				Value: []byte(requestId),
+			},
+			{
+				Key:   []byte("eventType"),
+				Value: []byte(eventType),
+			},
+		},
+	}
+
+	_, _, err = producer.SendMessage(messageToProduce)
+	if err != nil {
+		return err
+	}
+
+	// time.Sleep(1 * time.Second)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (KafkaProducer) BuildMessageFormat(eventType string, requestId string, producer string, data []byte) ([]byte, error) {
-	response := fmt.Sprintf(`{"version":"1.3.0","requestId":"%s","timestamp":%d,"eventType":"%s","producer":"%s","data":%s}`, requestId, time.Now().UnixNano()/int64(time.Second), eventType, producer, string(data))
+func (KafkaProducer) buildMessageFormat(eventType string, requestId string, producerName string, data []byte) ([]byte, error) {
+	response := fmt.Sprintf(`{"version":"1.3.0","requestId":"%s","timestamp":%d,"eventType":"%s","producer":"%s-withSdk","data":%s}`, requestId, time.Now().UnixNano()/int64(time.Second), eventType, producerName, string(data))
 	return []byte(response), nil
 }
