@@ -11,7 +11,15 @@ import (
 	"github.com/Netsocs-Team/netsocs_go_sdk/pkg/sdk_errors"
 )
 
-type KafkaProducer struct{}
+type kafkaProducer struct{}
+
+func NewKafkaProducer() (KafkaProducer, error) {
+	err := createProducer()
+	if err != nil {
+		return nil, err
+	}
+	return kafkaProducer{}, nil
+}
 
 var producer sarama.SyncProducer
 
@@ -33,13 +41,7 @@ func createProducer() error {
 	return nil
 }
 
-func (kp KafkaProducer) Send(topic string, eventType string, requestId string, producerName string, data []byte) error {
-	if producer == nil {
-		err := createProducer()
-		if err != nil {
-			return err
-		}
-	}
+func (kp kafkaProducer) Send(topic string, eventType string, requestId string, producerName string, data []byte) error {
 
 	message, err := kp.buildMessageFormat(eventType, requestId, producerName, data)
 	if err != nil {
@@ -66,16 +68,10 @@ func (kp KafkaProducer) Send(topic string, eventType string, requestId string, p
 		return err
 	}
 
-	// time.Sleep(1 * time.Second)
-
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (KafkaProducer) buildMessageFormat(eventType string, requestId string, producerName string, data []byte) ([]byte, error) {
+func (kafkaProducer) buildMessageFormat(eventType string, requestId string, producerName string, data []byte) ([]byte, error) {
 	response := fmt.Sprintf(`{"version":"1.3.0","requestId":"%s","timestamp":%d,"eventType":"%s","producer":"%s-withSdk","data":%s}`, requestId, time.Now().UnixNano()/int64(time.Second), eventType, producerName, string(data))
 	return []byte(response), nil
 }
